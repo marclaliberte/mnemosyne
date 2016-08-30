@@ -73,7 +73,7 @@ class FeedPuller(object):
         while self.enabled:
             if self.hpc is not None and self.hpc.connected:
                 difference = datetime.now() - self.last_received
-                if difference.seconds > 15:
-                    logger.warning('No activity for 15 seconds, forcing reconnect')
-                    self.hpc.stop()
+                #if difference.seconds > 15:
+                    #logger.warning('No activity for 15 seconds, forcing reconnect')
+                    #self.hpc.stop()
             gevent.sleep(15)

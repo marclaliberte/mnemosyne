@@ -79,7 +79,7 @@ class Normalizer(object):
                         norm = self.normalizers[channel].normalize(hpfeed_item['payload'],
                                                                    channel, hpfeed_item['timestamp'])
 
-                        #batch up normalized items
+                            #batch up normalized items
                         to_be_inserted.append((norm, hpfeed_item['_id']))
                         normalizations += 1
                     elif channel not in no_normalizers_warnings:

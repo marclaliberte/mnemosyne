@@ -26,6 +26,7 @@ class ThugEvents(BaseNormalizer):
     channels = ('thug.events',)
 
     def normalize(self, data, channel, submission_timestamp):
+        print data
         #split up original payload, so that there are only one root element
         data = '<THUG_DATA>' + data + '</THUG_DATA>'
 
@@ -40,36 +41,39 @@ class ThugEvents(BaseNormalizer):
             for a in analysis:
                 timestamp = datetime.strptime(
                     a.attrib['start_datetime'], '%Y-%m-%d %H:%M:%S.%f')
-
                 data = {}
-                object_element = a.find(
-                    '{http://maec.mitre.org/XMLSchema/maec-core-1}Subject/{http://maec.mitre.org/XMLSchema/maec-core-1}Object')
 
-                data['url'] = object_element.find(
-                    './{http://maec.mitre.org/XMLSchema/maec-core-1}Internet_Object_Attributes/{http://maec.mitre.org/XMLSchema/maec-core-1}URI').text
+                try:
+                    object_element = a.find(
+                        '{http://maec.mitre.org/XMLSchema/maec-core-1}Subject/{http://maec.mitre.org/XMLSchema/maec-core-1}Object')
 
-                code_snippets = object_element.findall(
-                    './{http://maec.mitre.org/XMLSchema/maec-core-1}Associated_Code/{http://maec.mitre.org/XMLSchema/maec-core-1}Associated_Code_Snippet/{http://maec.mitre.org/XMLSchema/maec-core-1}Code_Snippet')
-                for snippet in code_snippets:
-                    language = snippet.attrib['language']
-                    source = snippet.find('./{http://maec.mitre.org/XMLSchema/maec-core-1}Code_Segment').text
+                    data['url'] = object_element.find(
+                        './{http://maec.mitre.org/XMLSchema/maec-core-1}Internet_Object_Attributes/{http://maec.mitre.org/XMLSchema/maec-core-1}URI').text
 
-                    hashes = super(ThugEvents, self).generate_checksum_list(source)
+                    code_snippets = object_element.findall(
+                        './{http://maec.mitre.org/XMLSchema/maec-core-1}Associated_Code/{http://maec.mitre.org/XMLSchema/maec-core-1}Associated_Code_Snippet/{http://maec.mitre.org/XMLSchema/maec-core-1}Code_Snippet')
+                    for snippet in code_snippets:
+                        language = snippet.attrib['language']
+                        source = snippet.find('./{http://maec.mitre.org/XMLSchema/maec-core-1}Code_Segment').text
 
-                    file_ = {
-                        'encoding': 'hex',
-                        'content_guess': language,
-                        'data': source.encode('hex'),
-                        'hashes': hashes
-                    }
+                        hashes = super(ThugEvents, self).generate_checksum_list(source)
 
-                    if 'extractions' not in data:
-                        data['extractions'] = []
-                    data['extractions'].append({'timestamp': timestamp,
-                                                'hashes': hashes})
+                        file_ = {
+                            'encoding': 'hex',
+                            'content_guess': language,
+                            'data': source.encode('hex'),
+                            'hashes': hashes
+                        }
 
-                    return_list.append({'file': file_})
-                return_list.append({'url': data})
+                        if 'extractions' not in data:
+                            data['extractions'] = []
+                        data['extractions'].append({'timestamp': timestamp,
+                                                    'hashes': hashes})
+
+                        return_list.append({'file': file_})
+                    return_list.append({'url': data})
+                except Exception as err:
+                    print "No analysis data found"
         return return_list
 
 #Thanks leo!
